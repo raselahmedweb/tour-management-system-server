@@ -1,30 +1,66 @@
+/* eslint-disable no-console */
 import { Server } from "http";
 import mongoose from "mongoose";
 import app from "./app";
+import { envVars } from "./app/config/env";
 
 let server: Server;
 
-const port = process.env.PORT || 3000;
-
 const startServer = async () => {
   try {
-    await mongoose.connect(
-      "mongodb+srv://mongodb:mongodb@cluster0.zmilpe0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-    );
+    await mongoose.connect(envVars.DB_URL);
     console.log("Connected to MongoDB");
-    server = app.listen(port, () => {
-      console.log(`Server is running on http://localhost:${port}`);
+    server = app.listen(envVars.PORT, () => {
+      console.log(`Server is running on http://localhost:${envVars.PORT}`);
     });
   } catch (error) {
     console.error("Error starting the server:", error);
     process.exit(1);
   }
 };
+
 startServer();
 
-// Handle graceful shutdown
+// Error handleing
+
+process.on("SIGINT", (error) => {
+  console.error("SIGINT signal received ..... server shutting down", error);
+  if (server) {
+    server.close(() => {
+      process.exit(1);
+    });
+  }
+  process.exit(1);
+});
+
+process.on("SIGTERM", (error) => {
+  console.error("SIGTERM signal received ..... server shutting down", error);
+  if (server) {
+    server.close(() => {
+      process.exit(1);
+    });
+  }
+  process.exit(1);
+});
+
 process.on("unhandledRejection", (error) => {
-  console.error("Unhandled promise rejection:", error);
+  console.error(
+    "Unhandled rejection detected ..... server shutting down",
+    error
+  );
+  if (server) {
+    server.close(() => {
+      process.exit(1);
+    });
+  }
+  process.exit(1);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error(
+    "Unhandled exception detected ..... server shutting down",
+    error
+  );
   if (server) {
     server.close(() => {
       process.exit(1);
