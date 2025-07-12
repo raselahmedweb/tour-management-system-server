@@ -1,21 +1,38 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextFunction, Request, Response } from "express";
 import httpStatus from "http-status-codes";
 import { UserServices } from "./user.service";
+import { catchAsync } from "../../utils/catchAsync";
+import { sendResponse } from "../../utils/sendResponse";
 
-const createUser = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    // throw new Error("Fake error");
+const createUser = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
     const user = await UserServices.createUser(req.body);
-    res.status(httpStatus.CREATED).json({
+    sendResponse(res, {
+      statusCode: httpStatus.CREATED,
+      success: true,
       message: "User created successfully",
-      user,
+      data: user,
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
-    next(err);
   }
-};
+);
+
+const getAllUsers = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const result = await UserServices.getAllUsers();
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Users retrieved successfully",
+      data: result.users,
+      meta: {
+        total: result.total,
+      },
+    });
+  }
+);
 
 export const UserControllers = {
   createUser,
+  getAllUsers,
 };
